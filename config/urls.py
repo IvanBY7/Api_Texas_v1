@@ -55,11 +55,12 @@ router.register(r'registers', RegisterViewSet)
 router.register(r'sensors', SensorViewSet)
 router.register(r'dispositivos', dispositivoViewSet)
 router.register(r'empresa', CompanyViewSet)
+router.register(r'region', RegionViewSet)
 
 auth_urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 apidocs_urlpatterns = [
     path('', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc-ui'),
@@ -68,19 +69,18 @@ apidocs_urlpatterns = [
         schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path(r'^redoc/$', schema_view.with_ui('redoc',
         cache_timeout=0), name='schema-redoc'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 api_urlpatterns = [
     path('', include(router.urls)),
     path('auth/', include(auth_urlpatterns)),
     path('docs/', include(apidocs_urlpatterns))
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns = [
     path("accounts/", include("rest_framework.urls", namespace="rest_framework")),
     path('api/v1/', include(api_urlpatterns)),
     path('', admin.site.urls),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

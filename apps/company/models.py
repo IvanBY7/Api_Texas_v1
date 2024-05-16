@@ -17,6 +17,7 @@ class config_web_empresa(models.Model):
 class  company(BaseAbstractModel):
     IdEmpresa = models.AutoField(primary_key= True)
     Nombre_Empresa = models.CharField(('Empresa'), default="", null= False, max_length=50)
+    ClaveEmpresa = models.CharField(('Clave'), default='',max_length=64, null= False, blank=False)
     Url_img = models.ImageField(('Imagen'), upload_to='imagenes/', null=True, blank=True)
     fk_config = models.ForeignKey(config_web_empresa, on_delete=models.DO_NOTHING, null=True, blank=True)
     def __str__(self): 
@@ -34,6 +35,7 @@ class Rl_user_company(models.Model):
 class region(BaseAbstractModel):
     IdRegion = models.AutoField(primary_key= True, null= False)
     Nombre_region = models.CharField(('Region'), default= "", max_length=50, null=False, blank=False)
+    ImagenEmpresa = models.ImageField(('Imagen'), upload_to='regiones/', null=True, blank=True)
     Ubicacion = models.CharField(('Ubicación'), default= "", max_length=150, null= True, blank= True)
     Telefono = models.CharField(default= "", max_length=15, null= True, blank=True)
     Correo = models.CharField(default= "", max_length=50, null=True, blank= True)
@@ -53,7 +55,7 @@ class Sucursal(BaseAbstractModel):
     Ruta_img = models.CharField(('img'), default= "", null= True, blank= True, max_length=200)
     
     # Llaves foraneas
-    fk_IdRegion = models.ForeignKey(region, null= False, blank= False, on_delete=models.CASCADE)
+    fk_IdRegion = models.ForeignKey(region, null= True, blank= True, on_delete=models.CASCADE)
     
     def __srt__(self):
         return self.Nombre_sucursal

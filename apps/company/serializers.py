@@ -11,14 +11,16 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = company
         fields = '__all__'
-
-    fk_config = configSerializer()
+        extra_kwargs = {
+            'IdEmpresa': {'read_only': True},  # Permitir que el campo IdEmpresa sea escribible
+        }
 
 class Rl_user_companySerializer(serializers.ModelSerializer):
+    fk_IdEmpresa = CompanySerializer()  # Definir el campo utilizando CompanySerializer
+
     class Meta:
         model = Rl_user_company
         fields = '__all__'
-    fk_IdEmpresa  = CompanySerializer()
 
 class regionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,7 +31,7 @@ class Rl_sucursal_licenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = region
         fields = '__all__'
-    fk_IdLicencia = licenciaSerializer()
+    # fk_IdLicencia = licenciaSerializer()
 
 class Area_trabajoSerializer(serializers.ModelSerializer):
     class Meta:
