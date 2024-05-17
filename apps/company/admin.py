@@ -31,6 +31,11 @@ class Rl_sucursal_licencia(admin.ModelAdmin):
     list_display = ('Id_relacion', 'fk_IdSucursal','fk_IdLicencia', )
     search_fields = ('fk_IdSucursal', 'fk_IdLicencia', )
 
+@admin.register(Rl_usuario_sucursal)
+class Rl_usuario_sucursal(admin.ModelAdmin):
+    list_display = ('IdRelacion', 'fk_IdUsuario','fk_IdSucursal', )
+    search_fields = ('fk_IdUsuario', 'fk_IdSucursal', )
+    
 @admin.register(Area_trabajo)
 class Area_trabajo(admin.ModelAdmin):
     list_display = ('IdArea', 'Nombre_zona','fk_IdSucursal', 'Is_active',)

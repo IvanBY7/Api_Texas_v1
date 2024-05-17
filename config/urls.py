@@ -56,6 +56,7 @@ router.register(r'sensors', SensorViewSet)
 router.register(r'dispositivos', dispositivoViewSet)
 router.register(r'empresa', CompanyViewSet)
 router.register(r'region', RegionViewSet)
+router.register(r'sucursal', SucursalViewSet)
 
 auth_urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

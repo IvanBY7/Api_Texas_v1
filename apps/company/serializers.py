@@ -1,5 +1,6 @@
 from apps.company.models import *
 from apps.memberships.serializers import *
+from apps.accounts.serializers import *
 from rest_framework import serializers
 
 class configSerializer(serializers.ModelSerializer):
@@ -21,12 +22,24 @@ class Rl_user_companySerializer(serializers.ModelSerializer):
     class Meta:
         model = Rl_user_company
         fields = '__all__'
+        
+class Rl_company_userSerializer(serializers.ModelSerializer):
+    fk_IdUsuario = UserSerializer()  # Definir el campo utilizando CompanySerializer
+
+    class Meta:
+        model = Rl_user_company
+        fields = '__all__'
 
 class regionSerializer(serializers.ModelSerializer):
     class Meta:
         model = region
         fields = '__all__'
 
+class sucursalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sucursal
+        fields = '__all__'
+        
 class Rl_sucursal_licenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = region

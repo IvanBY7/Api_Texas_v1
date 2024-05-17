@@ -52,7 +52,7 @@ class Sucursal(BaseAbstractModel):
     Telefono = models.CharField(default= "", max_length=15, null= True, blank=True)
     Correo = models.CharField(default= "", max_length=50, null=True, blank= True)
     Is_active = models.BooleanField(default=True)
-    Ruta_img = models.CharField(('img'), default= "", null= True, blank= True, max_length=200)
+    ImagenSucursal = models.ImageField(('Imagen'), upload_to='sucursales/', null=True, blank=True)
     
     # Llaves foraneas
     fk_IdRegion = models.ForeignKey(region, null= True, blank= True, on_delete=models.CASCADE)
@@ -68,11 +68,19 @@ class Rl_sucursal_licencia(models.Model):
     def __srt__(self):
         return self.Id_relacion
     
+class Rl_usuario_sucursal(models.Model):
+    IdRelacion = models.AutoField(primary_key= True)
+    fk_IdUsuario = models.ForeignKey(User, null= False, blank= False, on_delete= models.CASCADE)
+    fk_IdSucursal = models.ForeignKey(Sucursal, null= False, blank= False, on_delete= models.CASCADE)
+    
+    def __srt__(self):
+        return self.Id_relacion
+    
 class Area_trabajo(models.Model):
     IdArea = models.AutoField(primary_key= True)
     Nombre_zona = models.CharField(default= "", null= False, max_length=50 )
     Is_active = models.BooleanField(default= True)
-    fk_IdSucursal = models.ForeignKey(Sucursal, null= False, on_delete= models.CASCADE)
+    fk_IdSucursal = models.ForeignKey(Sucursal, default="", null= True, blank=True, on_delete= models.CASCADE)
     
     def __srt__(self):
         return self.Nombre_zona

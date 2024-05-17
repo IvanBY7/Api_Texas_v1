@@ -30,7 +30,8 @@ class dispositivo(BaseAbstractModel):
     Modelo = models.CharField(default="", max_length=50, null=False, blank=False)
     MAC = models.CharField(default="", max_length=20, null=False, blank=False)
     Estado = models.CharField(default="nuevo", choices=ESTADOS, max_length=15, null=False, blank=False)
-    
+    fk_IdEmpresa = models.ForeignKey(company, null= True, blank= True, on_delete= models.CASCADE)
+
     def __str__(self):
         return self.Modelo
     

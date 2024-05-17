@@ -164,3 +164,39 @@ class RegionViewSet(viewsets.ModelViewSet):
         Region.delete()
         
         return Response({'detail': 'Empresa e imagen asociada eliminadas correctamente.'}, status=status.HTTP_204_NO_CONTENT)
+
+class SucursalViewSet(viewsets.ModelViewSet):
+    parser_classes = [MultiPartParser, FormParser]
+    queryset = Sucursal.objects.all()
+    serializer_class = sucursalSerializer
+    
+    @action(detail=False, methods=['post'], url_path='create-sucursal', url_name='create-sucursal')
+    def create_sucursal(self, request):
+        serializer = sucursalSerializer(data=request.data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            # Validar si ya existe una empresa con el mismo nombre
+            print(validated_data)
+            nombre_region = serializer.validated_data.get('Nombre_sucursal')
+            idregion = serializer.validated_data.get('fk_IdRegion')
+            if Sucursal.objects.filter(Nombre_sucursal=nombre_region, fk_IdRegion=idregion).exists():
+                # Si ya existe una empresa con el mismo nombre, devolver un error
+                return Response({'error': 'Ya existe una sucursal registrada con estos datos'}, status=status.HTTP_302_FOUND)
+            #convertir y guardar modelo
+            reg = Sucursal(**validated_data)
+            reg.save()
+            serializer_response = sucursalSerializer(reg)
+            
+            licencia = serializer.validated_data.get('Licencia')
+            if Licencia.objects.get(Licencia=licencia).DoesNotExist:
+                licenciaasignada= Licencia.objects.get(Licencia='LicenciaDefault')
+                return Response({
+                    "Message", "Licencia por defecto asignada"
+                })
+            licenciaasignada = Licencia.object.get(Licencia=licencia)
+            create = Rl_sucursal_licencia.objects.create(
+                fk_IdSucursal = reg,
+                fk_IdLicencia = licenciaasignada
+            )
+            return Response(serializer_response.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
