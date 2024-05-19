@@ -8,7 +8,7 @@ from rest_framework import permissions
 from apps.accounts.models import *
 from apps.sensors.serializers import config_tipoSerializer
 from .serializers import *
-from apps.company.models import Area_trabajo
+from apps.company.models import *
 import traceback  # Para obtener la traza completa del error
 # Create your views here.
 
@@ -140,10 +140,12 @@ class RegisterViewSet(viewsets.ModelViewSet):
                 )
         except:
             area = Area_trabajo.objects.get(Nombre_zona='AreaDefault')
+            empresa = company.objects.get(IdEmpresa = request.data.get('EMPRESA'))
             create= dispositivo.objects.create(
                 IdArea = area,
                 Modelo = request.data.get('MODELO'),
                 MAC = request.data.get('MAC'),
+                fk_IdEmpresa = empresa
             )
             return Response(
                 {"Registred": "Dispositivo Registrado"},

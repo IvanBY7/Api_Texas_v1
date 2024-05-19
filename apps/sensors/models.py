@@ -26,11 +26,11 @@ class dispositivo(BaseAbstractModel):
         ('nuevo', 'Nuevo'),
     )
     IdDispositivo = models.AutoField(primary_key=True)
-    IdArea = models.ForeignKey(Area_trabajo, null=False, blank=False, on_delete= models.CASCADE)
+    IdArea = models.ForeignKey(Area_trabajo, null=False, blank=False, on_delete= models.DO_NOTHING)
     Modelo = models.CharField(default="", max_length=50, null=False, blank=False)
     MAC = models.CharField(default="", max_length=20, null=False, blank=False)
     Estado = models.CharField(default="nuevo", choices=ESTADOS, max_length=15, null=False, blank=False)
-    fk_IdEmpresa = models.ForeignKey(company, null= True, blank= True, on_delete= models.CASCADE)
+    fk_IdEmpresa = models.ForeignKey(company, null= True, blank= True, on_delete= models.DO_NOTHING)
 
     def __str__(self):
         return self.Modelo
@@ -46,15 +46,15 @@ class sensor(BaseAbstractModel):
     IsAlive = models.BooleanField(default= True)
     Estado = models.CharField (default= 'habilitado', choices= ESTADOS, null= False, blank= False, max_length=15)
     #Llaves foraneas
-    fk_IdTipo = models.ForeignKey(config_tipo_sensor, default="", blank=False, null=False, on_delete=models.CASCADE)
-    fk_IdDispositivo = models.ForeignKey(dispositivo, default="", blank=False, null=False, on_delete=models.CASCADE)
+    fk_IdTipo = models.ForeignKey(config_tipo_sensor, default="", blank=False, null=False, on_delete=models.DO_NOTHING)
+    fk_IdDispositivo = models.ForeignKey(dispositivo, default="", blank=False, null=False, on_delete=models.DO_NOTHING)
     
     def __str__(self):
         return self.Nombre
     
 class register(BaseAbstractModel):
     IdRegistro = models.BigAutoField(('ID'), primary_key=True)
-    fk_IdSensor = models.ForeignKey( sensor, null=False, on_delete= models.CASCADE)
+    fk_IdSensor = models.ForeignKey( sensor, null=False, on_delete= models.DO_NOTHING)
     Valor = models.CharField( default='', max_length=50, null= True, blank= True)
     
     def __str__(self):

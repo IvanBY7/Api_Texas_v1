@@ -41,6 +41,9 @@ Finally start development server:
 
     $ python manage.py runserver
 
+iniciar celery en windows, en caso de ser en ubuntu omitir el "--pool=solo"
+    $ celery -A config worker -l INFO --pool=solo 
+
 ### PROD
 
 Just make a copy from `.env.production.example` and/or rename to `.env.production` and setup your variables. Then run in terminal:

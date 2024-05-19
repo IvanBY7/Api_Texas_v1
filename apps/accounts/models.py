@@ -12,7 +12,7 @@ from .managers import UserManager
 
 
 class User(AbstractUser):
-
+    is_active = models.BooleanField(default=False)  # Ensure the default is inactive
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 

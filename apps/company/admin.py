@@ -23,7 +23,7 @@ class region(admin.ModelAdmin):
     
 @admin.register(Sucursal)
 class Sucursal(admin.ModelAdmin):
-    list_display = ('IdSucursal', 'Nombre_sucursal','Correo', 'fk_IdRegion', 'Is_active')
+    list_display = ('IdSucursal', 'Nombre_sucursal','Correo', 'fk_IdRegion', 'is_active')
     search_fields = ('IdSucursal', 'Fecha', 'Nombre_sucursal', 'fk_IdRegion', )
     
 @admin.register(Rl_sucursal_licencia)

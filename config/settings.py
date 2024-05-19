@@ -107,7 +107,7 @@ USE_TZ = True
 # https://github.com/celery/celery/issues/4178
 
 CELERY_BROKER_URL = os.environ.get("CLOUDAMQP_URL", "amqp://guest:guest@localhost:5672//")
-CELERY_RESULT_BACKEND = None
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     "broker_connection_retry_on_startup": True  # Permite reintentar la conexión con el broker
 }
@@ -137,7 +137,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'http://localhost:3000/#/')
 
+FRONTEND_SUCCESS_URL = f'{FRONTEND_DOMAIN}auth/success'
 # STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 

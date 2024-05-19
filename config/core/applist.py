@@ -11,13 +11,16 @@ DJANGO_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites'
 ]
-
+SITE_ID = 1
 THIRD_PART_APPS = [
     'django_filters',
     'rest_framework',
     'corsheaders',    
-    'drf_yasg',    
+    'drf_yasg',
+    'django_celery_results',
+    'celery'
 ]
 
 LOCAL_APPS = [

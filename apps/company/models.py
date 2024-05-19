@@ -39,7 +39,7 @@ class region(BaseAbstractModel):
     Ubicacion = models.CharField(('Ubicación'), default= "", max_length=150, null= True, blank= True)
     Telefono = models.CharField(default= "", max_length=15, null= True, blank=True)
     Correo = models.CharField(default= "", max_length=50, null=True, blank= True)
-    fk_IdEmpresa = models.ForeignKey(company, null= True, blank= True, on_delete= models.CASCADE)
+    fk_IdEmpresa = models.ForeignKey(company, null= True, blank= True, on_delete= models.DO_NOTHING)
 
     def __str__(self):
         return self.Nombre_region
@@ -51,11 +51,11 @@ class Sucursal(BaseAbstractModel):
     Ubicacion = models.CharField(default= "", max_length=150, null= True, blank= True)
     Telefono = models.CharField(default= "", max_length=15, null= True, blank=True)
     Correo = models.CharField(default= "", max_length=50, null=True, blank= True)
-    Is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
     ImagenSucursal = models.ImageField(('Imagen'), upload_to='sucursales/', null=True, blank=True)
     
     # Llaves foraneas
-    fk_IdRegion = models.ForeignKey(region, null= True, blank= True, on_delete=models.CASCADE)
+    fk_IdRegion = models.ForeignKey(region, null= True, blank= True, on_delete=models.DO_NOTHING)
     
     def __srt__(self):
         return self.Nombre_sucursal
@@ -80,7 +80,7 @@ class Area_trabajo(models.Model):
     IdArea = models.AutoField(primary_key= True)
     Nombre_zona = models.CharField(default= "", null= False, max_length=50 )
     Is_active = models.BooleanField(default= True)
-    fk_IdSucursal = models.ForeignKey(Sucursal, default="", null= True, blank=True, on_delete= models.CASCADE)
+    fk_IdSucursal = models.ForeignKey(Sucursal, default="", null= True, blank=True, on_delete= models.DO_NOTHING)
     
     def __srt__(self):
         return self.Nombre_zona

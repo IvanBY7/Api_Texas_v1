@@ -1,0 +1,14 @@
+<!-- templates/acc_active_email.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Activate your account</title>
+</head>
+<body>
+    <p>Hi {{ user.username }},</p>
+    <p>Thank you for registering at our site. Please click the link below to activate your account:</p>
+    <a href="http://{{ domain }}/api/v1/auth/activate/{{ uid }}/{{ token }}/">Activate your account</a>
+    <p>Thank you!</p>
+</body>
+</html>

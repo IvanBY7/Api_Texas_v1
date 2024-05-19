@@ -1,0 +1,17 @@
+<!-- templates/activation_email.html -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Activación de cuenta</title>
+</head>
+<body>
+    <p>¡Hola {{ user.username }}!,</p>
+    <p>Por favor, haz clic en el siguiente enlace para activar tu cuenta:</p>
+    <p class="url"><a href="{{ domain }}{% url 'activate' uidb64=uid token=token %}">Activar cuenta</a></p>
+    <p>Si no puedes hacer clic en el enlace, cópialo y pégalo en la barra de direcciones de tu navegador.</p>
+    <p>Gracias,</p>
+    <p>- AgenteMonitor</p>
+</body>
+</html>

@@ -26,7 +26,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
+# from apps.accounts.views import activate
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
@@ -61,6 +61,8 @@ router.register(r'sucursal', SucursalViewSet)
 auth_urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('activate/<str:uidb64>/<str:token>/', ActivateAccount.as_view(), name='activate'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 apidocs_urlpatterns = [

@@ -12,7 +12,6 @@ from .serializers import *
 import traceback  # Para obtener la traza completa del error
 from rest_framework.parsers import MultiPartParser, FormParser #Para la carga de archivos
 import hashlib #libreria de encryptado
-
 # Create your views here.
 class CompanyViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
@@ -169,13 +168,13 @@ class SucursalViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
     queryset = Sucursal.objects.all()
     serializer_class = sucursalSerializer
-    
+
     @action(detail=False, methods=['post'], url_path='create-sucursal', url_name='create-sucursal')
     def create_sucursal(self, request):
         serializer = sucursalSerializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            # Validar si ya existe una empresa con el mismo nombre
+            # Validar si ya existe una sucursal con el mismo nombre
             print(validated_data)
             nombre_region = serializer.validated_data.get('Nombre_sucursal')
             idregion = serializer.validated_data.get('fk_IdRegion')
@@ -190,6 +189,10 @@ class SucursalViewSet(viewsets.ModelViewSet):
             licencia = serializer.validated_data.get('Licencia')
             if Licencia.objects.get(Licencia=licencia).DoesNotExist:
                 licenciaasignada= Licencia.objects.get(Licencia='LicenciaDefault')
+                create = Rl_sucursal_licencia.objects.create(
+                    fk_IdSucursal = reg,
+                    fk_IdLicencia = licenciaasignada
+                )
                 return Response({
                     "Message", "Licencia por defecto asignada"
                 })
@@ -200,3 +203,16 @@ class SucursalViewSet(viewsets.ModelViewSet):
             )
             return Response(serializer_response.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'], url_path='by-region', url_name='by-region')
+    def get_sucursales_by_region(self, request):
+        region_id = request.query_params.get('IdRegion')
+        if not region_id:
+            return Response({"error": "No se ha proporcionado una región"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            sucursales = Sucursal.objects.filter(fk_IdRegion_id=region_id)
+            serializer = sucursalSerializer(sucursales, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
