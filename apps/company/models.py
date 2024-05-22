@@ -64,7 +64,8 @@ class Rl_sucursal_licencia(models.Model):
     Id_relacion = models.AutoField(primary_key= True)
     fk_IdSucursal = models.ForeignKey(Sucursal, null= False, blank= False, on_delete= models.CASCADE)
     fk_IdLicencia = models.ForeignKey(Licencia, null= False, blank= False, on_delete= models.CASCADE)
-    
+    Fecha_vencimiento = models.DateTimeField(('Fecha de vencimiento'), null=True, blank=True)
+
     def __srt__(self):
         return self.Id_relacion
     
@@ -74,7 +75,7 @@ class Rl_usuario_sucursal(models.Model):
     fk_IdSucursal = models.ForeignKey(Sucursal, null= False, blank= False, on_delete= models.CASCADE)
     
     def __srt__(self):
-        return self.Id_relacion
+        return self.IdRelacion
     
 class Area_trabajo(models.Model):
     IdArea = models.AutoField(primary_key= True)

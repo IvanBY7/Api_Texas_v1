@@ -81,6 +81,7 @@ class RegisterViewSet(viewsets.ModelViewSet):
             try:
                 #Verifica que haya uns lista de dispositivos
                 sensores = request.data.get('SensorDispositivo')
+                
                 if not sensores:
                     #Retorna error en caso de que no haya sensores
                     return Response(
@@ -89,12 +90,16 @@ class RegisterViewSet(viewsets.ModelViewSet):
                     )
                 #recorre la lista de sensores
                 for sens in sensores:
+                    #Obtención del sensor
                     querysensor = sensor.objects.filter(Nombre = sens.get('sensor'), fk_IdDispositivo = dispositivo2)
-                    querytipo = config_tipo_sensor.objects.get(Nombre = 'Default')
                     primer_sensor = querysensor.first()
-                    #Registro del sensor
+
+                    #Verificando si el sensor existe
                     if not querysensor:
+                        querytipo = config_tipo_sensor.objects.get(Nombre = 'Default')
                         try:
+                            
+                            #Registro del sensor
                             createsensor = sensor.objects.create(
                                 Nombre = sens.get('sensor'),
                                 Licencia_sensor = 'licencia',
@@ -110,7 +115,7 @@ class RegisterViewSet(viewsets.ModelViewSet):
                                 {"Error": "No se pudo crear"}
                             )
                     try:
-                        
+                        #creación de registro
                         primsens = SensorSerializer(primer_sensor)
                         createregister = register.objects.create(
                             fk_IdSensor = primer_sensor,
@@ -178,6 +183,116 @@ class RegisterViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         return Response ({"Registros del sensor":id, "Registros":registros.data})
+    
+    @action(detail=False, methods=['get'], url_path='get-register_short/(?P<id>\d+)/(?P<rango>\d+)', url_name='data')
+    def get_RegisterBySensor_short(self, request, id, rango):
+        print(id)
+        print(rango)
+        try:
+            queryregisters = register.objects.filter(fk_IdSensor = id).order_by('-created_at')[:int(rango)]
+            if not queryregisters:
+                return Response(
+                    {
+                        "error": "No se encontrarons registros",
+                    },
+                    status = status.HTTP_204_NO_CONTENT
+                )
+            registros = RegisterSerializer(queryregisters, many=True)
+        except Exception as e:
+            # Capturar cualquier excepción y devolver información sobre el error
+            error_message = str(e)  # Obtiene el mensaje de error
+            error_trace = traceback.format_exc()  # Traza completa del error
+                        
+            return Response(
+                {
+                    "error": "Error al obtener los registros",
+                    "message": error_message,
+                    "trace": error_trace
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        return Response ({"Registros del sensor":id, "Registros":registros.data})
+    
+    @action(detail=False, methods=['get'], url_path='get_sensors_by_company/(?P<id>\d+)', url_name='data')
+    def get_sensors_by_company(self, request, id):
+
+        try:
+            #Buscar el dispositivo
+            querydispositivo = dispositivo.objects.filter(fk_IdEmpresa = id)
+            
+            #Verificar que haya dispositivo
+            areas = []
+            if not querydispositivo:
+                return Response(
+                    {
+                        "error": "No se encontraron dispositivos de esta empresa",
+                    },
+                    status = status.HTTP_204_NO_CONTENT
+                )
+            Dispositivos = dispositivoSerializer(querydispositivo, many=True)
+            
+            #Iterar sobre la lista de dispositivos
+            for dispo in Dispositivos.data:
+                
+                #Filtrar los sensores por dispositivo
+                querysensores = sensor.objects.filter(fk_IdDispositivo = dispo.get('IdDispositivo'))
+                
+                #verificar la existencia de los sensores
+                if not querysensores:
+                    infoArea = {
+                        'idDispositivo': dispo.get('IdDispositivo'),
+                        'Nombre_zona': dispo.get('IdArea').get('Nombre_zona')
+                    }
+                    areas.append(infoArea)
+                else:
+                    sensoresResponse = SensorSerializer(querysensores, many=True)
+                    #Iterar sobre los sensores
+                    sensores = []
+                    for sensorindividual in sensoresResponse.data:
+                        # print(sensorindividual)
+                        queryRegistro = register.objects.filter(fk_IdSensor = sensorindividual.get('IdSensor')).order_by('-created_at').first()
+                        if not queryRegistro:
+                            return Response(
+                                {
+                                    "error": "No se encontraron registros de este sensor",
+                                },
+                                status = status.HTTP_204_NO_CONTENT
+                            )
+                        else:
+                            registroResponse = RegisterSerializer(queryRegistro)
+                            # print(registroResponse.data)
+                            infoRegistro = {
+                                'valor': registroResponse.data.get('Valor'),
+                                'fecha_registro': registroResponse.data.get('created_at')
+                            }
+                            infoSensor = {
+                                'id': sensorindividual.get('IdSensor'),
+                                'config': sensorindividual.get('fk_IdTipo'),
+                                'registro': infoRegistro
+                            }
+                            sensores.append(infoSensor)
+                    infoarea = {
+                        'idDispositivo': dispo.get('IdDispositivo'),
+                        'Nombre_zona': dispo.get('IdArea').get('Nombre_zona'),
+                        'sensores': sensores
+                    }
+                    areas.append(infoarea)
+        except Exception as e:
+            # Capturar cualquier excepción y devolver información sobre el error
+            error_message = str(e)  # Obtiene el mensaje de error
+            error_trace = traceback.format_exc()  # Traza completa del error
+                        
+            return Response(
+                {
+                    "error": "Error al obtener los registros",
+                    "message": error_message,
+                    "trace": error_trace
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        return Response ({"areas": areas})
+    
+    
 class dispositivoViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows registers to be viewed or edited.

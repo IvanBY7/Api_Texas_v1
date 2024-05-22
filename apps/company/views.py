@@ -1,17 +1,26 @@
 import os
 from django.conf import settings
 import uuid
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework import permissions
 from apps.accounts.models import *
+from apps.sensors.models import *
+from apps.sensors.serializers import *
 from .models import *
 from .serializers import *
 import traceback  # Para obtener la traza completa del error
 from rest_framework.parsers import MultiPartParser, FormParser #Para la carga de archivos
 import hashlib #libreria de encryptado
+from datetime import timedelta
+from django.utils import timezone
+
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Random import get_random_bytes
+import binascii
 # Create your views here.
 class CompanyViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
@@ -171,6 +180,15 @@ class SucursalViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='create-sucursal', url_name='create-sucursal')
     def create_sucursal(self, request):
+        def decrypt_from_hex(encrypted_text_hex, key):
+            encrypted_data = binascii.unhexlify(encrypted_text_hex.encode())
+            iv = encrypted_data[:16]  # Extraer el IV
+            ct_bytes = encrypted_data[16:]
+
+            cipher = AES.new(key, AES.MODE_CBC, iv=iv)
+            decrypted_data = unpad(cipher.decrypt(ct_bytes), AES.block_size)
+            return decrypted_data.decode('utf-8')
+        
         serializer = sucursalSerializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
@@ -186,22 +204,52 @@ class SucursalViewSet(viewsets.ModelViewSet):
             reg.save()
             serializer_response = sucursalSerializer(reg)
             
-            licencia = serializer.validated_data.get('Licencia')
-            if Licencia.objects.get(Licencia=licencia).DoesNotExist:
-                licenciaasignada= Licencia.objects.get(Licencia='LicenciaDefault')
+            #obtener la licencia
+            licencia = request.data.get('Licencia')
+            encryption_key_hex = '300d960a707396f529f0e6ab0cb27f4469e09fa215be10e0cdb80a40cbe2c6ed'
+            encryption_key = binascii.unhexlify(encryption_key_hex)
+            
+            #validar si la licencia proporcionada existe
+            try:
+                
+                print(licencia)
+                querylicencia=Licencia.objects.get(Licencia=licencia)
+                #se desencripta la licencia
+                print("si lo encontró")
+                decrypted_text = decrypt_from_hex(licencia, encryption_key)
+                print(f"Texto desencriptado: {decrypted_text}")
+                
+                partes_licencia = decrypted_text.split('/')
+                dias_vencimiento = int(partes_licencia[0])
+                
+                # Calcular la fecha de vencimiento
+                fecha_vencimiento = timezone.now() + timedelta(days=dias_vencimiento)
+                
                 create = Rl_sucursal_licencia.objects.create(
                     fk_IdSucursal = reg,
-                    fk_IdLicencia = licenciaasignada
+                    fk_IdLicencia = querylicencia,
+                    Fecha_vencimiento = fecha_vencimiento
                 )
-                return Response({
-                    "Message", "Licencia por defecto asignada"
-                })
-            licenciaasignada = Licencia.object.get(Licencia=licencia)
-            create = Rl_sucursal_licencia.objects.create(
-                fk_IdSucursal = reg,
-                fk_IdLicencia = licenciaasignada
-            )
-            return Response(serializer_response.data, status=status.HTTP_201_CREATED)
+                
+                print(querylicencia.Estado_licencia)
+                querylicencia.Estado_licencia='vigente'
+                querylicencia.save()
+                
+            except:
+                fecha_vencimiento = timezone.now() + timedelta(days=7)
+                licenciaasignada= Licencia.objects.get(Licencia='LicenciaDefault')
+                #en caso de que no existe, se asigna la licencia por defecto
+                create = Rl_sucursal_licencia.objects.create(
+                    fk_IdSucursal = reg,
+                    fk_IdLicencia = licenciaasignada,
+                    Fecha_vencimiento = fecha_vencimiento
+                )
+            response_data = {
+                "message": "Sucursal creada y licencia asignada correctamente",
+                "fecha_vencimiento": fecha_vencimiento,
+                "sucursal": serializer_response.data
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['get'], url_path='by-region', url_name='by-region')
@@ -214,5 +262,108 @@ class SucursalViewSet(viewsets.ModelViewSet):
             sucursales = Sucursal.objects.filter(fk_IdRegion_id=region_id)
             serializer = sucursalSerializer(sucursales, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class AreaViewSet(viewsets.ModelViewSet):
+    parser_classes = [MultiPartParser, FormParser]
+    queryset = Area_trabajo.objects.all()
+    serializer_class = Area_trabajoSerializer
+    
+    @action(detail=False, methods=['post'], url_path='create-area', url_name='create-area')
+    def createArea(self, request):
+
+        serializer = Area_trabajoSerializer(data=request.data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            # Validar si ya existe una empresa con el mismo nombre
+            nombre_zona = serializer.validated_data.get('Nombre_zona')
+            idsucursal = request.data.get('fk_IdSucursal')
+            
+            try:
+                querysucursal = Sucursal.objects.get(pk=idsucursal)
+            except:
+                return Response({"Error":"No existe la sucursal"}, status=status.HTTP_204_NO_CONTENT)
+            if Area_trabajo.objects.filter(Nombre_zona=nombre_zona, fk_IdSucursal=idsucursal).exists():
+                # Si ya existe una empresa con el mismo nombre, devolver un error
+                return Response({'error': 'Ya existe una area con los mismos datos.'}, status=status.HTTP_400_BAD_REQUEST)
+            #convertir y guardar modelo
+            
+            area = Area_trabajo.objects.create(
+                Nombre_zona = nombre_zona,
+                Is_active = True,
+                fk_IdSucursal =querysucursal
+            )
+            area.save()
+            serializer_response = Area_trabajoSerializer(area)
+            return Response(serializer_response.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'], url_path='get-area-by-sucursal', url_name='get-area-by-sucursal')
+    def get_area_by_sucursal(self, request):
+        idsucursal = request.query_params.get('IdSucursal')
+        
+        if not idsucursal:
+            return Response({'error': 'Se requiere proporcionar el ID de la sucursal.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            sucursal = get_object_or_404(Sucursal, pk=idsucursal)
+            areas = Area_trabajo.objects.filter(fk_IdSucursal=sucursal)
+            areaserializer = Area_trabajoSerializer(areas, many=True)
+            lista_area = []
+            for area in areaserializer.data:
+
+                try:
+                    querydispositivo = dispositivo.objects.get(IdArea = area.get('IdArea'))
+                    dispositivoserializer = dispositivoSerializer(querydispositivo)
+
+                    if dispositivoserializer.data:
+                        querysensor = sensor.objects.filter(fk_IdDispositivo = querydispositivo)
+                        sensorserializer = SensorSerializer(querysensor, many=True)
+                        sensores=[]
+                        for sensorindividual in sensorserializer.data:
+
+                            queryregistro = register.objects.filter(fk_IdSensor = sensorindividual.get('IdSensor')).order_by('-created_at').first()
+                            registro = RegisterSerializer(queryregistro)
+                            hoy = timezone.now()
+                            queryregistrohoy = register.objects.filter(created_at=hoy)
+                            if queryregistrohoy.exists():
+
+                                valormax = queryregistrohoy.order_by('-Valor').first()
+                                valormaxsrializer = RegisterSerializer(valormax)
+                                valormaximo = valormaxsrializer.data.get('Valor')
+
+                                valormin = queryregistrohoy.order_by('Valor').first()
+                                valorminserializer = RegisterSerializer(valormin)
+                                valorminimo = valorminserializer.data.get('Valor')
+                            else:
+                                valormaximo = "#"
+                                valorminimo = "#"
+                                
+                            registro_info = {
+                                "sensor": sensorindividual.get('IdSensor'),
+                                "tipo": sensorindividual.get('fk_IdTipo'),
+                                "valor": registro.data.get('Valor'),
+                                "Fecha_registro": registro.data.get('created_at'),
+                                "valor_maximo": valormaximo,
+                                "valor_minimo": valorminimo
+                            }
+                            # print(registro_info)
+                            sensores.append(registro_info)
+                        area_info = {
+                            "IdArea": area.get('IdArea'),
+                            "Nombre_zona": area.get('Nombre_zona'),
+                            "sensores": sensores
+                        }
+                        lista_area.append(area_info)
+                except:
+                    area_info = {
+                            "IdArea": area.get('IdArea'),
+                            "Nombre_zona": area.get('Nombre_zona')
+                        }
+                    lista_area.append(area_info)
+            return Response(lista_area, status=status.HTTP_200_OK)
+        except Sucursal.DoesNotExist:
+            return Response({'error': 'Sucursal no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

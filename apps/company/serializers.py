@@ -47,6 +47,8 @@ class Rl_sucursal_licenciaSerializer(serializers.ModelSerializer):
     # fk_IdLicencia = licenciaSerializer()
 
 class Area_trabajoSerializer(serializers.ModelSerializer):
+    fk_IdSucursal = sucursalSerializer(read_only=True)
+    
     class Meta:
         model = Area_trabajo
         fields = '__all__'
