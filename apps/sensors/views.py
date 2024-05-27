@@ -252,12 +252,16 @@ class RegisterViewSet(viewsets.ModelViewSet):
                         # print(sensorindividual)
                         queryRegistro = register.objects.filter(fk_IdSensor = sensorindividual.get('IdSensor')).order_by('-created_at').first()
                         if not queryRegistro:
-                            return Response(
-                                {
-                                    "error": "No se encontraron registros de este sensor",
-                                },
-                                status = status.HTTP_204_NO_CONTENT
-                            )
+                            infoRegistro = {
+                                'valor': '#',
+                                'fecha_registro': '#'
+                            }
+                            infoSensor = {
+                                'id': sensorindividual.get('IdSensor'),
+                                'config': sensorindividual.get('fk_IdTipo'),
+                                'registro': infoRegistro
+                            }
+                            sensores.append(infoSensor)
                         else:
                             registroResponse = RegisterSerializer(queryRegistro)
                             # print(registroResponse.data)
