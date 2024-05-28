@@ -260,8 +260,27 @@ class SucursalViewSet(viewsets.ModelViewSet):
         
         try:
             sucursales = Sucursal.objects.filter(fk_IdRegion_id=region_id)
+            if not sucursales.exists():
+                return Response ({"mmesage": "No existen sucursales de este empresa"})
+            lista_sucursales = []
+            for sucursal in sucursales:
+                sucursalserializado = sucursalSerializer(sucursal)
+                querylicencia = Rl_sucursal_licencia.objects.filter(fk_IdSucursal = sucursal)
+                if not querylicencia.exists():
+                    infosucursales = {
+                        'sucursal': sucursalserializado.data,
+                        'licencias': 'null'
+                    }
+                    lista_sucursales.append(infosucursales)
+                else:
+                    licenciaserializada = licenciaSerializer(querylicencia, many=True)
+                    infosucursales = {
+                        'sucursal': sucursalserializado.data,
+                        'licencias': licenciaserializada.data
+                    }
+                    lista_sucursales.append(infosucursales)
             serializer = sucursalSerializer(sucursales, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(lista_sucursales, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
